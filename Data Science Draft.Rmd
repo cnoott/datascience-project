@@ -93,7 +93,7 @@ test = sleep_stress[-sample,]
 
 #tree.model = tree(High ~ . -Sales, Carseats,subset = train)
 #tree.pred = predict(tree.carseats,Carseats.test,type = "class")
-#table(tree.pred,High.test)
+#table(tree.pred,High.test) #random comment
 ```
 
 
