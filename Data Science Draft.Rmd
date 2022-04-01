@@ -1,0 +1,100 @@
+---
+title: "Data Science Draft"
+author: "Shadae Lewis"
+date: "3/27/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Notes:
+1. Change heading names
+
+Importing the data
+
+Column names:
+snoring - snoring range of the user (snoring rate) 
+respiration - respiration rate
+bodytemp - body temperature 
+limb - limb movement rate 
+bloodO - blood oxygen levels
+eye - eye movement
+sleephrs - number of hours of sleep
+heart - heart rate 
+stress - Stress Levels (0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
+
+```{r}
+sleep_stress = read.csv("C:/Users/shada/Documents/UH/Spring 2022/Math 4322 - Data Science and Machine Learning/Group Project/project/SleepStress.csv",sep=",", header=TRUE)
+sleep_stress
+```
+
+
+Playing with the data
+
+```{r}
+summary(sleep_stress)
+
+#looks like there are no NA's or blank spaces in the data
+#stress that we are investigating is not binary 
+
+```
+
+```{r}
+#correlation
+cor(sleep_stress)
+
+pairs(sleep_stress)
+
+#seems like there is a relationship with stress levels and all other variables
+```
+
+Decision Tree
+
+```{r}
+library(tree)
+library(boot)
+
+#convert stress to factor
+sleep_stress$stress = as.character(sleep_stress$stress)
+
+#Renaming the values
+#(0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
+sleep_stress$stress[sleep_stress$stress == '0'] = "low/normal"
+sleep_stress$stress[sleep_stress$stress == '1'] = "medium low"
+sleep_stress$stress[sleep_stress$stress == '2'] = "medium"
+sleep_stress$stress[sleep_stress$stress == '3'] = "medium high"
+sleep_stress$stress[sleep_stress$stress == '4'] = "high"
+
+```
+
+
+Before training and testing sets
+```{r}
+sleep_stress$stress = as.factor(sleep_stress$stress)
+
+tree.sleep.stress = tree(stress~.,sleep_stress)
+summary(tree.sleep.stress)
+
+plot(tree.sleep.stress)
+text(tree.sleep.stress,pretty = 0)
+
+```
+
+
+With training and testing sets
+```{r}
+
+set.seed(2)
+sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+train = sleep_stress[sample,]
+test = sleep_stress[-sample,]
+
+#tree.model = tree(High ~ . -Sales, Carseats,subset = train)
+#tree.pred = predict(tree.carseats,Carseats.test,type = "class")
+#table(tree.pred,High.test)
+```
+
+
+
