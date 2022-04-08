@@ -24,7 +24,9 @@ heart - heart rate
 stress - Stress Levels (0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
 
 ```{r}
+
 sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, col.names = c("snoring", "respiration", "bodytemp", "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
+
 sleep_stress
 ```
 
