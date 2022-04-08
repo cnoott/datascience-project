@@ -9,8 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Notes:
-1. Change heading names
 
 Importing the data
 
@@ -26,7 +24,9 @@ heart - heart rate
 stress - Stress Levels (0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
 
 ```{r}
-sleep_stress = read.csv("./SleepStress.csv",sep=",", header=TRUE)
+
+sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, col.names = c("snoring", "respiration", "bodytemp", "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
+
 sleep_stress
 ```
 
@@ -36,9 +36,6 @@ Playing with the data
 ```{r}
 summary(sleep_stress)
 
-#looks like there are no NA's or blank spaces in the data
-#stress that we are investigating is not binary 
-
 ```
 
 ```{r}
@@ -47,7 +44,6 @@ cor(sleep_stress)
 
 pairs(sleep_stress)
 
-#seems like there is a relationship with stress levels and all other variables
 ```
 
 Decision Tree
@@ -86,15 +82,61 @@ text(tree.sleep.stress,pretty = 0)
 With training and testing sets
 ```{r}
 
+#for(i in 1:10){
+  
+##training and testing sets
 set.seed(2)
 sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
 train = sleep_stress[sample,]
 test = sleep_stress[-sample,]
 
-#tree.model = tree(High ~ . -Sales, Carseats,subset = train)
-#tree.pred = predict(tree.carseats,Carseats.test,type = "class")
-#table(tree.pred,High.test) #random comment
+
+
+##unpruned
+tree.model = tree(stress ~ ., data = sleep_stress,subset = sample)
+summary(tree.model)
+
+plot(tree.model)
+text(tree.model, pretty=TRUE)
+
+
+
+##testing the unpruned model
+model.pred = predict(tree.model,test,type = "class")
+matrix = table(model.pred,test$stress)
+matrix
+
+#error rate 
+matrix[4,3]/sum(matrix)
+
 ```
 
+```{r}
+
+##cross validation 
+cv.sleep_stress = cv.tree(tree.model,FUN = prune.misclass)
+cv.sleep_stress
+
+## 5 is still the best number of nodes
+plot(cv.sleep_stress$size,cv.sleep_stress$dev,type = "b")
 
 
+
+##prune
+prune.sleep_stress = prune.misclass(tree.model,best = 5)
+
+plot(prune.sleep_stress)
+text(prune.sleep_stress,pretty = 0)
+
+
+
+##testing the pruned model
+tree.pred = predict(prune.sleep_stress,test,type = "class")
+matrix2 = table(tree.pred,test$stress)
+matrix2
+
+##error rate 
+matrix2[4,3]/sum(matrix2)
+
+#}
+```
