@@ -26,7 +26,7 @@ heart - heart rate
 stress - Stress Levels (0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
 
 ```{r}
-sleep_stress = read.csv("./SleepStress.csv",sep=",", header=TRUE)
+sleep_stress = read.csv("./stress_sleep.csv",sep=",", header=TRUE)
 sleep_stress
 ```
 
