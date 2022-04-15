@@ -141,3 +141,16 @@ matrix2[4,3]/sum(matrix2)
 
 #}
 ```
+Random Forest
+
+```{r}
+
+install.packages("randomForest")
+
+library(randomForest)
+
+sleep.rf = randomForest(stress ~ ., data=sleep_stress,mtry=(8/3), importance = TRUE)
+
+sleep.rf
+
+```
