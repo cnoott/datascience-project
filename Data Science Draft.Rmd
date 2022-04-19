@@ -32,22 +32,17 @@ sleep_stress
 
 
 Playing with the data
-
 ```{r}
 summary(sleep_stress)
-
 ```
 
 ```{r}
 #correlation
 cor(sleep_stress)
-
 pairs(sleep_stress)
-
 ```
 
 Decision Tree
-
 ```{r}
 library(tree)
 library(boot)
@@ -81,9 +76,7 @@ text(tree.sleep.stress,pretty = 0)
 
 With training and testing sets
 ```{r}
-
 #for(i in 1:10){
-  
 ##training and testing sets
 set.seed(2)
 sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
