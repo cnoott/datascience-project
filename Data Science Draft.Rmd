@@ -33,17 +33,22 @@ sleep_stress
 
 
 Playing with the data
+
 ```{r}
 summary(sleep_stress)
+
 ```
 
 ```{r}
 #correlation
 cor(sleep_stress)
+
 pairs(sleep_stress)
+
 ```
 
 Decision Tree
+
 ```{r}
 library(tree)
 library(boot)
@@ -77,7 +82,9 @@ text(tree.sleep.stress,pretty = 0)
 
 With training and testing sets
 ```{r}
+
 #for(i in 1:10){
+  
 ##training and testing sets
 set.seed(2)
 sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
@@ -141,10 +148,13 @@ Random Forest
 library(randomForest)
 set.seed(10)
 
+sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+train = sleep_stress[sample, "stress"]
+X.test = sleep_stress[-sample,]
 
-train.rf = sample(1:nrow(sleep_stress), nrow(sleep_stress)/2)
+#train.rf = sample(1:nrow(sleep_stress), nrow(sleep_stress)/2)
 
-test.rf = sleep_stress[-train.rf, "stress"]
+#test.rf = sleep_stress[-train.rf, "stress"]
 
 X.test = sleep_stress[-train.rf, -9] 
 
@@ -152,15 +162,15 @@ B = 1000
 sleep.rf = randomForest(stress ~., data = sleep_stress, 
                         # subset = train.rf,
                         # xtest = X.test, ytest = test.rf,
-                        # ntree = B, 
+                        # ntree = B,
                         mtry=(ncol(sleep_stress)-1)/3, 
                         importance = TRUE)
 
 sleep.rf
 
 yhat.rf = predict(sleep.rf, newdata = sleep_stress[-train.rf,])
-
-mean((yhat.rf - test.rf)^2)
+s = yhat.rf - test.rf
+mean(s^2)
 
 
 
