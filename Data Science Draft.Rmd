@@ -146,33 +146,39 @@ Random Forest
 ```{r}
 
 library(randomForest)
-set.seed(10)
 
-sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
-train = sleep_stress[sample, "stress"]
-X.test = sleep_stress[-sample,]
+means.rf = c();
 
-#train.rf = sample(1:nrow(sleep_stress), nrow(sleep_stress)/2)
+for (i in c(1:10))
+{
+set.seed(i)
+  
+sleep_stress$stress = as.factor(sleep_stress$stress)
+train.rf = sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+test.rf = sleep_stress[-train.rf,]
 
-#test.rf = sleep_stress[-train.rf, "stress"]
-
-X.test = sleep_stress[-train.rf, -9] 
-
-B = 1000
 sleep.rf = randomForest(stress ~., data = sleep_stress, 
-                        # subset = train.rf,
-                        # xtest = X.test, ytest = test.rf,
-                        # ntree = B,
-                        mtry=(ncol(sleep_stress)-1)/3, 
+                        subset = train.rf,
+                        mtry=(ncol(sleep_stress)-1)/3 ,  
                         importance = TRUE)
 
 sleep.rf
 
-yhat.rf = predict(sleep.rf, newdata = sleep_stress[-train.rf,])
-s = yhat.rf - test.rf
-mean(s^2)
+yhat.rf = predict(sleep.rf, newdata = test.rf)
+
+#mean((yhat.rf - test.rf$stress)^2)
+
+means.rf[i] = mean((yhat.rf != test.rf$stress))
 
 
+
+
+}
+
+print("Mean values of each i:")
+print(means.rf)
+
+print(mean(means.rf))
 
 importance(sleep.rf)
 varImpPlot(sleep.rf, sort = TRUE, main = "Output")
