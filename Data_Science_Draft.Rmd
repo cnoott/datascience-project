@@ -131,7 +131,9 @@ test.rf = sleep_stress[-train.rf,]                             # testing set
 
 sleep.rf = randomForest(stress ~., data = sleep_stress,       # random forest model w/ training data
                         subset = train.rf,
+
                         mtry=sqrt((ncol(sleep_stress)-1)) ,  
+
                         importance = TRUE)
 
 sleep.rf
