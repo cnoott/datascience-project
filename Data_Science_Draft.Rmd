@@ -113,6 +113,9 @@ The model formula is:
 
 \textit{stress \textasciitilde  \hspace{1mm} snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart}
 
+We set a loop to run 10 times and set the seed to the ith iteration. For each iteration, we did a 80/20 training and testing split. We then ran the random forest model with the training set. Then we ran the model with the test data. (EXPLAIN THE MEANS HERE)
+
+
 \vspace{5mm}
 
 ```{r,results='hide', echo=FALSE, error=FALSE, message= FALSE}
