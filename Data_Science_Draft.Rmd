@@ -48,7 +48,9 @@ Through analyzing the dataset obtained, we wish to answer the following question
 
 \section{Decision Trees Model}
 
-The model for the decision trees is: stress ~ snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart
+The model for the decision trees is: 
+
+\textit{stress \textasciitilde \hspace{1mm} snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart}
 
 The values reported in this section were obtained when the seed was set to 2. All variables in the data set were used to create the decision trees because the correlation matrix indicated that all predictors were valuable. First we started with creating a decision tree with the entire data (no training or testing sets). The single tree produced 5 terminal nodes with a misclassification error rate of 0.003175. The data was then separated into training and testing sets using an 80/20 split. An unpruned tree was created which gave the same tree display as the tree created with the entire data set. The unpruned tree gave a training error rate of 0.003968 which is close to the error rate produced from the tree with the entire data. The testing error rate produced was 0.007936508 and the testing accuracy rate was 0.9920635. Since the error rate is close to 0 and the accuracy rate is close to 1, this indicates that the tree is predicting very well.
 
@@ -89,18 +91,11 @@ text(tree.sleep.stress,pretty = 0)
 
 We next moved on to see if there can be improvements made to the accuracy rate, error rate, and tree display by pruning the tree. The graph from the prune showed that 5 nodes was the best option for the tree. 5 nodes showed a dev of 8 which is significantly smaller than the deviance shown for 4 or less nodes which were 335, 423, 423, and 423 respectively. With both the pruned and unpruned tree having the same number of nodes, this leads to them having the same error rate and accuracy rate. This also means that the decision tree cannot be improved by pruning the data without giving up a significant amount of error. 
 
-```{r}
-##Cross validation 
-
-```
+\subsubsection{Cross Validation}
 
 If we were to choose 4 or less nodes even though the deviance is high, this would cause an increase in the error rate and a decrease in the accuracy rate. We do not want to give up too much error in order to have a smaller tree. To prove this we chose to create a tree with 4 nodes. 4 nodes had the second smallest deviance of 335. This tree gave an error rate of 0.2698413 and an accuracy rate of 0.7301587. This error rate is significantly higher than 0.007936508 which is the error rate from the tree with 5 nodes. We are looking at an error percentage of approximately 0% compared to 27%. We do not want to give up 27% of error which is why 5 nodes is best. 
 
-```{r}
-##Pruned Tree
-
-
-```
+\subsubsection{The Pruned Tree}
 
 The code was also repeated 10 times with 10 different train/test subdivisions in order to compare error rates.. The seed was set from 1 through 10 with 1 being for the first subdivision and 10 being the last subdivision. The error rates were all close to zero, and the average of all 10 was determined to be 0.01111111. This indicates again that the trees predicted well regardless of what the seed was. Each time the error rate was close to 0 or at zero which indicates high accuracy. 
 
@@ -162,16 +157,16 @@ varImpPlot(sleep.rf, sort = TRUE, main = "Variable Importance")
 
 ```
 
-#Conclusion
+\section{Conclusion}
 To conclude, through decision trees we found that snoring rate and body temperature are two prevalent predictors in determining the relationship between sleep and stress.
 Random forests are usually more accurate than decision trees
 
 
 \newpage
 
-#Code Appendix
+\section{Code Appendix}
 
-##Importing the data
+\subsection{Importing the data}
 
 ```{r,results='hide'}
 sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, 
@@ -180,7 +175,7 @@ sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE,
 sleep_stress
 ```
 
-##Initial Investigations of the data
+\subsection{Initial Investigations of the data}
 
 ```{r,results='hide'}
 summary(sleep_stress)
@@ -197,7 +192,7 @@ pairs(sleep_stress)
 #There is a strong relationship between stress levels and all other variables
 ```
 
-##Decision Trees Model
+\subsection{Decision Trees Model}
 
 ```{r,warning=FALSE,message=FALSE,error=FALSE}
 library(tree)
@@ -323,7 +318,7 @@ accuracy3
 ```
 
 
-##Random Forest Model
+\subsection{Random Forest Model}
 
 ```{r,results='hide',fig.keep='none'}
 
@@ -369,11 +364,11 @@ varImpPlot(sleep.rf, sort = TRUE, main = "Output")
 
 \newpage
 
-#References
+\section{References}
 
 Rachakonda, Laavanya. “Human Stress Detection in and through Sleep.” Kaggle, 15 Feb. 2022, https://www.kaggle.com/datasets/laavanya/human-stress-detection-in-and-through-sleep?select=SaYoPillow.csv. 
 
-#Git Repository
+\section{Git Repository}
 
 https://github.com/cnoott/datascience-project
 
