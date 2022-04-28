@@ -1,7 +1,6 @@
 ---
-title: "Data Science Draft"
-author: "Shadae Lewis"
-date: "3/27/2022"
+title: "The Realation of Stress and Sleep"
+author: "Liam Amadio, Yanely Ayala, Rolando Castaneda, Lauren Hernandez,Shadae Lewis, "
 output: pdf_document
 ---
 
@@ -9,54 +8,160 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Introduction
 
-Importing the data
+In today’s culture, ‘all-nighters’ are commonplace and sleep is not taken as seriously as it should be. According to the national sleep foundation 70 to 96 percent of college students get less than eight hours of sleep each night. And over 50 percent of college students sleep less than seven hours per night. A good night’s rest can go a really long way in improving health, mood, productivity and stress.  There are many factors that go into high quality sleep. There is a combination of many factors that can contribute to stress that our data will explore. Our goal is to understand which predictors correlate with stress level. 
 
-Column names:
-snoring - snoring range of the user (snoring rate) 
-respiration - respiration rate
-bodytemp - body temperature 
-limb - limb movement rate 
-bloodO - blood oxygen levels
-eye - eye movement
-sleephrs - number of hours of sleep
-heart - heart rate 
-stress - Stress Levels (0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
+To best understand which sleep factors contribute the most to stress, we examine the data provided by Smart-Pillow: An IoT based Device for Stress Detection Considering Sleeping Habits. We analyze sleep data such as the snoring rate, respiration rate, body temperature, limb movement, blood oxygen, eye movement, sleeping hours, and heart rate. In using this sleep data, we are trying to predict which of the aforementioned variables contribute most to the overall stress level of an individual. 
 
-```{r}
+# About the Data
+
+The data provided was taken not from human test subjects, but an overview received from literature reviews previously published works on sleep and stress. This data set demonstrates the relationship between sleep and stress in a given individual. The utilization of this data is for the purpose of determining what factors are most likely to affect stress levels during sleep. 
+Stress levels are calculated through certain standards met in the other predictors. These testing gradients then rate an individual with a value 1 through 5, 5 being the highest stress level experienced during sleep, and assigned to the stress predictor.
+
+Through analyzing the dataset obtained, we wish to answer the following questions:  (1) Are we able to determine someone’s stress level based on their body’s behavior while sleeping? (2) Which variables are significant when determining the stress level of an individual? In order to determine the response to the above questions, we used Decision trees and Random Forest models. Although recursive binary splitting for decision trees provide good predictions on the training data, it tends to overfit and perform poorly on the test data. To fix this we pruned the tree which selects a subtree that yields the lowest test error rate. Decision trees also struggle with prediction accuracy and suffer from high variance where different subsets of the same data could yield drastically different results. Random Forest is one method to tackle these issues. Random Forests grows B large un-pruned trees but each time a tree split is considered, it picks a random subset of m (sqrt(p) for classification) predictors from the full set of p predictors. This stabilizes the variance of the estimate. We expect the Random Forest test error to be smaller than the test error for a single decision tree.  
+
+## Variables:
+
+* Column 1: Snoring Rate (snoring)
+* Column 2: Respiration Rate (respiration)
+* Column 3: Body Temperature (bodytemp)
+* Column 4: Limb Movement (limb)
+* Column 5: Blood Oxygen (bloodO)
+* Column 6: Eye Movement (eye)
+* Column 7: Sleeping Hours (sleephrs)
+* Column 8: Heart Rate (heart)
+* Column 9: Stress Level (stress) – 0-low/normal, 1-medium low, 2-medium, 3-medium high, 4-high
 
 
-sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, col.names = c("snoring", "respiration", "bodytemp", "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
+# Model 1 (Decision Trees)
 
-sleep_stress
+The model for the decision trees is: stress ~ snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart
+
+The values reported in this section were obtained when the seed was set to 2. All variables in the data set were used to create the decision trees because the correlation matrix indicated that all predictors were valuable. First we started with creating a decision tree with the entire data (no training or testing sets). The single tree produced 5 terminal nodes with a misclassification error rate of 0.003175. The data was then separated into training and testing sets using an 80/20 split. An unpruned tree was created which gave the same tree display as the tree created with the entire data set. The unpruned tree gave a training error rate of 0.003968 which is close to the error rate produced from the tree with the entire data. The testing error rate produced was 0.007936508 and the testing accuracy rate was 0.9920635. Since the error rate is close to 0 and the accuracy rate is close to 1, this indicates that the tree is predicting very well.
+
+
+```{r,results='hide',echo=FALSE}
+sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, 
+                        col.names = c("snoring", "respiration", "bodytemp", 
+                        "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
 ```
 
-
-Playing with the data
-
-```{r}
-summary(sleep_stress)
-
-```
-
-```{r}
-#correlation
-cor(sleep_stress)
-
-pairs(sleep_stress)
-
-```
-
-Decision Tree
-
-```{r}
+```{r,warning=FALSE,message=FALSE,error=FALSE,echo=FALSE,results='hide'}
 library(tree)
 library(boot)
 
-#convert stress to factor
 sleep_stress$stress = as.character(sleep_stress$stress)
 
-#Renaming the values
+##Renaming the values
+#(0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
+sleep_stress$stress[sleep_stress$stress == '0'] = "low/normal"
+sleep_stress$stress[sleep_stress$stress == '1'] = "medium low"
+sleep_stress$stress[sleep_stress$stress == '2'] = "medium"
+sleep_stress$stress[sleep_stress$stress == '3'] = "medium high"
+sleep_stress$stress[sleep_stress$stress == '4'] = "high"
+
+
+##With training and testing sets
+#########
+sleep_stress$stress = as.factor(sleep_stress$stress)
+
+set.seed(2)
+sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+train = sleep_stress[sample,]
+test = sleep_stress[-sample,]
+
+##Unpruned tree
+tree.model = tree(stress ~ ., data = sleep_stress,subset = sample)
+#summary(tree.model)
+#tree.model
+
+##Plotting the unpruned model
+plot(tree.model)
+text(tree.model, pretty=0)
+
+```
+
+We next moved on to see if there can be improvements made to the accuracy rate, error rate, and tree display by pruning the tree. The graph from the prune showed that 5 nodes was the best option for the tree. 5 nodes showed a dev of 8 which is significantly smaller than the deviance shown for 4 or less nodes which were 335, 423, 423, and 423 respectively. With both the pruned and unpruned tree having the same number of nodes, this leads to them having the same error rate and accuracy rate. This also means that the decision tree cannot be improved by pruning the data without giving up a significant amount of error. 
+
+```{r,results='hide',echo=FALSE}
+##Cross validation 
+cv.sleep_stress = cv.tree(tree.model,FUN = prune.misclass)
+#cv.sleep_stress
+plot(cv.sleep_stress$size,cv.sleep_stress$dev,type = "b")
+
+```
+
+If we were to choose 4 or less nodes even though the deviance is high, this would cause an increase in the error rate and a decrease in the accuracy rate. We do not want to give up too much error in order to have a smaller tree. To prove this we chose to create a tree with 4 nodes. 4 nodes had the second smallest deviance of 335. This tree gave an error rate of 0.2698413 and an accuracy rate of 0.7301587. This error rate is significantly higher than 0.007936508 which is the error rate from the tree with 5 nodes. We are looking at an error percentage of approximately 0% compared to 27%. We do not want to give up 27% of error which is why 5 nodes is best. 
+
+```{r,results='hide',echo=FALSE}
+##Pruned Tree
+
+set.seed(2)
+prune.check = prune.misclass(tree.model,best = 4)
+
+##Plot 
+plot(prune.check)
+text(prune.check,pretty = 0)
+
+```
+
+The code was also repeated 10 times with 10 different train/test subdivisions in order to compare error rates.. The seed was set from 1 through 10 with 1 being for the first subdivision and 10 being the last subdivision. The error rates were all close to zero, and the average of all 10 was determined to be 0.01111111. This indicates again that the trees predicted well regardless of what the seed was. Each time the error rate was close to 0 or at zero which indicates high accuracy. 
+
+The two predictors displayed in the tree are snoring and bodytemp. This indicates that the two most important variables that are related to stress are the snoring rate and body temperature. There is a higher significance and relationship between snoring, bodytemp and stress versus the other predictors that were not present in the decision tree. More on the importance of each variable will be seen in the random forest section with the use of the importance function. 
+
+
+# Model 2 (Random Forest)
+
+The model formula is: stress ~  snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart
+
+
+# Conclusion
+To conclude, through decision trees we found that snoring rate and body temperature are two prevalent predictors in determining the relationship between sleep and stress.
+Random forests are usually more accurate than decision trees
+
+
+\newpage
+
+# Code Appendix
+
+## Importing the data
+
+```{r,results='hide'}
+sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, 
+                        col.names = c("snoring", "respiration", "bodytemp", 
+                        "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
+sleep_stress
+```
+
+## Initial Investigations of the data
+
+```{r,results='hide'}
+summary(sleep_stress)
+
+#There are no NA's or blank spaces in the data
+#The response variable is not binary 
+```
+
+```{r,results='hide',fig.keep='none'}
+##Correlation
+cor(sleep_stress)
+pairs(sleep_stress)
+
+#There is a strong relationship between stress levels and all other variables
+```
+
+## Decision Trees Model
+
+```{r,warning=FALSE,message=FALSE,error=FALSE}
+library(tree)
+library(boot)
+```
+
+```{r}
+sleep_stress$stress = as.character(sleep_stress$stress)
+
+##Renaming the values
 #(0- low/normal, 1 – medium low, 2- medium, 3-medium high, 4 -high)
 sleep_stress$stress[sleep_stress$stress == '0'] = "low/normal"
 sleep_stress$stress[sleep_stress$stress == '1'] = "medium low"
@@ -66,9 +171,10 @@ sleep_stress$stress[sleep_stress$stress == '4'] = "high"
 
 ```
 
+```{r,results='hide',fig.keep='none'}
+##Before training and testing sets
+set.seed(2)
 
-Before training and testing sets
-```{r}
 sleep_stress$stress = as.factor(sleep_stress$stress)
 
 tree.sleep.stress = tree(stress~.,sleep_stress)
@@ -79,102 +185,144 @@ text(tree.sleep.stress,pretty = 0)
 
 ```
 
+```{r,results='hide',fig.keep='none'}
+##With training and testing sets
 
-With training and testing sets
-```{r}
-
-#for(i in 1:10){
+means=c();
+for(i in c(1:10)){
   
-##training and testing sets
-set.seed(2)
+set.seed(i)
 sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
 train = sleep_stress[sample,]
 test = sleep_stress[-sample,]
 
-
-
-##unpruned
+##Unpruned tree
 tree.model = tree(stress ~ ., data = sleep_stress,subset = sample)
-summary(tree.model)
+#summary(tree.model)
+#tree.model
 
-plot(tree.model)
-text(tree.model, pretty=TRUE)
-
-
+##Plotting the unpruned model
+#plot(tree.model)
+#text(tree.model, pretty=0)
 
 ##testing the unpruned model
 model.pred = predict(tree.model,test,type = "class")
 matrix = table(model.pred,test$stress)
-matrix
+#matrix
 
-#error rate 
-matrix[4,3]/sum(matrix)
+##Error rate
+error1 = matrix[4,3]/sum(matrix)
+#error1
 
-```
+##Accuracy rate
+accuracy1 = 1-error1
+#accuracy1
 
-```{r}
-
-##cross validation 
+##Cross validation 
 cv.sleep_stress = cv.tree(tree.model,FUN = prune.misclass)
-cv.sleep_stress
-
-## 5 is still the best number of nodes
-plot(cv.sleep_stress$size,cv.sleep_stress$dev,type = "b")
+#cv.sleep_stress
+#plot(cv.sleep_stress$size,cv.sleep_stress$dev,type = "b")
 
 
-
-##prune
+##Pruned Tree
 prune.sleep_stress = prune.misclass(tree.model,best = 5)
 
-plot(prune.sleep_stress)
-text(prune.sleep_stress,pretty = 0)
+##Plotting the pruned model
+#plot(prune.sleep_stress)
+#text(prune.sleep_stress,pretty = 0)
 
-
-
-##testing the pruned model
+##Testing the pruned model
 tree.pred = predict(prune.sleep_stress,test,type = "class")
 matrix2 = table(tree.pred,test$stress)
-matrix2
+#matrix2
 
-##error rate 
-matrix2[4,3]/sum(matrix2)
+##Error rate
+error2 = matrix2[4,3]/sum(matrix2)
+#error2
 
-#}
+##Accuracy rate
+accuracy2 = 1 - error2
+#accuracy2
+
+##Error rates for 10 different subdivisions
+means[i]=mean(model.pred != test$stress)
+print(means[i])
+} 
+
+##Average of means
+print(mean(means))
 ```
-Random Forest
 
-```{r}
+```{r,results='hide',fig.keep='none'}
+##Prune experiment with 4 nodes
+set.seed(2)
+prune.check = prune.misclass(tree.model,best = 4)
 
-library(randomForest)
-set.seed(10)
+#Plot
+plot(prune.check)
+text(prune.check,pretty = 0)
 
-sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
-train = sleep_stress[sample, "stress"]
-X.test = sleep_stress[-sample,]
+##Testing the pruned model
+tree.check = predict(prune.check,test,type = "class")
+matrix3 = table(tree.check,test$stress)
+matrix3
+
+##Error rate
+error3 = (matrix3[4,3] + matrix3[2,5])/sum(matrix3)
+error3
+
+##Accuracy rate
+accuracy3 = 1 - error3
+accuracy3
+```
+
+
+## Random Forest Model
+
+```{r,results='hide',fig.keep='none'}
+
+#library(randomForest)
+#set.seed(10)
+
+#sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+#train = sleep_stress[sample, "stress"]
+#X.test = sleep_stress[-sample,]
 
 #train.rf = sample(1:nrow(sleep_stress), nrow(sleep_stress)/2)
 
 #test.rf = sleep_stress[-train.rf, "stress"]
 
-X.test = sleep_stress[-train.rf, -9] 
+#X.test = sleep_stress[-train.rf, -9] 
 
-B = 1000
-sleep.rf = randomForest(stress ~., data = sleep_stress, 
+#B = 1000
+#sleep.rf = randomForest(stress ~., data = sleep_stress, 
                         # subset = train.rf,
                         # xtest = X.test, ytest = test.rf,
                         # ntree = B,
-                        mtry=(ncol(sleep_stress)-1)/3, 
-                        importance = TRUE)
+ #                       mtry=(ncol(sleep_stress)-1)/3, 
+  #                      importance = TRUE)
 
-sleep.rf
+#sleep.rf
 
-yhat.rf = predict(sleep.rf, newdata = sleep_stress[-train.rf,])
-s = yhat.rf - test.rf
-mean(s^2)
+#yhat.rf = predict(sleep.rf, newdata = sleep_stress[-train.rf,])
+#s = yhat.rf - test.rf
+#mean(s^2)
 
 
 
-importance(sleep.rf)
-varImpPlot(sleep.rf, sort = TRUE, main = "Output")
+#importance(sleep.rf)
+#varImpPlot(sleep.rf, sort = TRUE, main = "Output")
 
 ```
+
+\newpage
+
+# References
+
+Rachakonda, Laavanya. “Human Stress Detection in and through Sleep.” Kaggle, 15 Feb. 2022, https://www.kaggle.com/datasets/laavanya/human-stress-detection-in-and-through-sleep?select=SaYoPillow.csv. 
+
+#Git Repository
+
+https://github.com/cnoott/datascience-project
+
+
