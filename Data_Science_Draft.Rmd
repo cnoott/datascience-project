@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \section{Introduction}
 
-\hspace{10mm} In today’s culture, ‘all-nighters’ are commonplace and sleep is not taken as seriously as it should be. According to the national sleep foundation 70 to 96 percent of college students get less than eight hours of sleep each night. And over 50 percent of college students sleep less than seven hours per night. A good night’s rest can go a really long way in improving health, mood, productivity and stress.  There are many factors that go into high quality sleep. There is a combination of many factors that can contribute to stress that our data will explore. Our goal is to understand which predictors correlate with stress level. 
+In today’s culture, ‘all-nighters’ are commonplace and sleep is not taken as seriously as it should be. According to the national sleep foundation 70 to 96 percent of college students get less than eight hours of sleep each night. And over 50 percent of college students sleep less than seven hours per night. A good night’s rest can go a really long way in improving health, mood, productivity and stress.  There are many factors that go into high quality sleep. There is a combination of many factors that can contribute to stress that our data will explore. Our goal is to understand which predictors correlate with stress level. 
 
 To best understand which sleep factors contribute the most to stress, we examine the data provided by Smart-Pillow: An IoT based Device for Stress Detection Considering Sleeping Habits. We analyze sleep data such as the snoring rate, respiration rate, body temperature, limb movement, blood oxygen, eye movement, sleeping hours, and heart rate. In using this sleep data, we are trying to predict which of the aforementioned variables contribute most to the overall stress level of an individual. 
 
@@ -52,18 +52,15 @@ The model for the decision trees is:
 
 \textit{stress \textasciitilde \hspace{1mm} snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart}
 
-The values reported in this section were obtained when the seed was set to 2. All variables in the data set were used to create the decision trees because the correlation matrix indicated that all predictors were valuable. First we started with creating a decision tree with the entire data (no training or testing sets). The single tree produced 5 terminal nodes with a misclassification error rate of 0.003175. The data was then separated into training and testing sets using an 80/20 split. An unpruned tree was created which gave the same tree display as the tree created with the entire data set. The unpruned tree gave a training error rate of 0.003968 which is close to the error rate produced from the tree with the entire data. The testing error rate produced was 0.007936508 and the testing accuracy rate was 0.9920635. Since the error rate is close to 0 and the accuracy rate is close to 1, this indicates that the tree is predicting very well.
+The values reported in this section were obtained when the seed was set to 2. All variables in the data set were used to create the decision trees because the correlation matrix indicated that all predictors were valuable. First we started with creating a decision tree with the entire data (no training or testing sets). The single tree produced 5 terminal nodes with a misclassification error rate of 0.003175. The data was then separated into training and testing sets using an 80/20 split. An unpruned tree was created which gave a similar tree display as the tree created with the entire data set. The unpruned tree had 5 nodes and gave a training error rate of 0.003968 which is close to the error rate produced from the tree with the entire data. The testing error rate produced was 0.007936508 and the testing accuracy rate was 0.9920635. Since the error rate is close to 0 and the accuracy rate is close to 1, this indicates that the tree is predicting very well.
 
-```{r,warning=FALSE,message=FALSE,error=FALSE, echo=FALSE}
-library(tree)
-library(boot)
-```
-
-```{r,results='hide', echo=FALSE}
+```{r,results='hide',echo=FALSE}
 sleep_stress = read.csv(file = "SleepStress.csv",sep=",", header=TRUE, 
                         col.names = c("snoring", "respiration", "bodytemp", 
                         "limb", "bloodO", "eye","sleephrs", "heart", "stress"))
+```
 
+```{r,warning=FALSE,message=FALSE,error=FALSE,echo=FALSE,results='hide'}
 library(tree)
 library(boot)
 
@@ -78,24 +75,49 @@ sleep_stress$stress[sleep_stress$stress == '3'] = "medium high"
 sleep_stress$stress[sleep_stress$stress == '4'] = "high"
 
 
-set.seed(2)
+##With training and testing sets
 sleep_stress$stress = as.factor(sleep_stress$stress)
 
-tree.sleep.stress = tree(stress~.,sleep_stress)
-summary(tree.sleep.stress)
+set.seed(2)
+sample =sample(nrow(sleep_stress), nrow(sleep_stress)*.8)
+train = sleep_stress[sample,]
+test = sleep_stress[-sample,]
 
-plot(tree.sleep.stress)
-text(tree.sleep.stress,pretty = 0)
+##Unpruned tree
+tree.model = tree(stress ~ ., data = sleep_stress,subset = sample)
+#summary(tree.model)
+#tree.model
+
+##Plotting the unpruned model
+plot(tree.model)
+text(tree.model, pretty=0)
 
 ```
 
+
 We next moved on to see if there can be improvements made to the accuracy rate, error rate, and tree display by pruning the tree. The graph from the prune showed that 5 nodes was the best option for the tree. 5 nodes showed a dev of 8 which is significantly smaller than the deviance shown for 4 or less nodes which were 335, 423, 423, and 423 respectively. With both the pruned and unpruned tree having the same number of nodes, this leads to them having the same error rate and accuracy rate. This also means that the decision tree cannot be improved by pruning the data without giving up a significant amount of error. 
 
-\subsubsection{Cross Validation}
+```{r,results='hide',echo=FALSE}
+##Cross validation 
+cv.sleep_stress = cv.tree(tree.model,FUN = prune.misclass)
+#cv.sleep_stress
+plot(cv.sleep_stress$size,cv.sleep_stress$dev,type = "b")
+
+```
 
 If we were to choose 4 or less nodes even though the deviance is high, this would cause an increase in the error rate and a decrease in the accuracy rate. We do not want to give up too much error in order to have a smaller tree. To prove this we chose to create a tree with 4 nodes. 4 nodes had the second smallest deviance of 335. This tree gave an error rate of 0.2698413 and an accuracy rate of 0.7301587. This error rate is significantly higher than 0.007936508 which is the error rate from the tree with 5 nodes. We are looking at an error percentage of approximately 0% compared to 27%. We do not want to give up 27% of error which is why 5 nodes is best. 
 
-\subsubsection{The Pruned Tree}
+```{r,results='hide',echo=FALSE}
+##Pruned Tree
+
+set.seed(2)
+prune.check = prune.misclass(tree.model,best = 4)
+
+##Plot 
+plot(prune.check)
+text(prune.check,pretty = 0)
+
+```
 
 The code was also repeated 10 times with 10 different train/test subdivisions in order to compare error rates.. The seed was set from 1 through 10 with 1 being for the first subdivision and 10 being the last subdivision. The error rates were all close to zero, and the average of all 10 was determined to be 0.01111111. This indicates again that the trees predicted well regardless of what the seed was. Each time the error rate was close to 0 or at zero which indicates high accuracy. 
 
@@ -108,12 +130,10 @@ The model formula is:
 
 \textit{stress \textasciitilde  \hspace{1mm} snoring + respiration + bodytemp + limb + bloodO + eye + sleephrs + heart}
 
-We set a loop to run 10 times and set the seed to the ith iteration. For each iteration, we did a 80/20 training and testing split. We then ran the random forest model with the training set. Then we ran the model with the test data. (EXPLAIN THE MEANS HERE)
+First we set a loop to run 10 times and set the seed to the ith iteration. For each iteration, we did a 80/20 training and testing split. We then ran the random forest model with the training set and used the test data to predict each of the error rates. Finally, we took the average of the 10 splits which led to an error rate of 0.007142857. We also used the importance function to determine which variables had the most impact on the stress level. The graphs showed that snoring, body temperature and blood oxygen levels were the three most important variables. This matches with the output from the decision trees since snoring and body temperature were the two variables that showed up in the tree with snoring being the most important. 
 
 
-\vspace{5mm}
-
-```{r,results='hide', echo=FALSE, error=FALSE, message= FALSE}
+```{r,results='hide', echo=FALSE, error=FALSE, message= FALSE,warning=FALSE}
 
 library(randomForest)
 
@@ -140,9 +160,7 @@ yhat.rf = predict(sleep.rf, newdata = test.rf)              # running model w/ t
 
 #mean((yhat.rf - test.rf$stress)^2) 
 
-means.rf[i] = mean((yhat.rf != test.rf$stress)^2)            # 
-
-
+means.rf[i] = mean((yhat.rf != test.rf$stress)^2)           
 
 
 }
@@ -158,9 +176,12 @@ varImpPlot(sleep.rf, sort = TRUE, main = "Variable Importance")
 ```
 
 \section{Conclusion}
-To conclude, through decision trees we found that snoring rate and body temperature are two prevalent predictors in determining the relationship between sleep and stress.
-Random forests are usually more accurate than decision trees
 
+To conclude, through decision trees we found that snoring rate and body temperature were the two prevalent predictors in determining the relationship between sleep and stress. Random forests are usually more accurate than decision trees; therefore, the error rate for the random forest model was lower than the decision trees, which we expected. The model also determined that snoring rate and body temperature were two prevalent predictors with the addition of blood oxygen. Given this information, we can answer our first question: (1) our model was able to accurately predict stress levels in an individual since the error rate was found to be small and close to 0. We can also determine the answer to our second question: (2) it was discovered that body temperature, snoring rate, and blood oxygen were the most significant predictors in determining stress level of an individual.
+
+\section{Work distribution}
+
+The work was evenly split by all group members who worked on the project.
 
 \newpage
 
@@ -330,25 +351,27 @@ for (i in c(1:10))   #setting up the for loop for each seed i
 {
 set.seed(i)
 
-sleep_stress$stress = as.factor(sleep_stress$stress)   # setting the data response as a factor
-train.rf = sample(nrow(sleep_stress), nrow(sleep_stress)*.8)   # 80/20 training and testing set
-test.rf = sleep_stress[-train.rf,]                             # testing set
+# setting the data response as a factor
+sleep_stress$stress = as.factor(sleep_stress$stress)
+# 80/20 training and testing set
+train.rf = sample(nrow(sleep_stress), nrow(sleep_stress)*.8) 
+# testing set
+test.rf = sleep_stress[-train.rf,]                             
 
-sleep.rf = randomForest(stress ~., data = sleep_stress,       # random forest model w/ training data
+# random forest model w/ training data
+sleep.rf = randomForest(stress ~., data = sleep_stress,       
                         subset = train.rf,
                         mtry=sqrt((ncol(sleep_stress)-1)) ,
                         importance = TRUE)
 
 sleep.rf
 
-yhat.rf = predict(sleep.rf, newdata = test.rf)              # running model w/ test data
+# running model w/ test data
+yhat.rf = predict(sleep.rf, newdata = test.rf)              
 
 #mean((yhat.rf - test.rf$stress)^2)
 
-means.rf[i] = mean((yhat.rf != test.rf$stress)^2)            #
-
-
-
+means.rf[i] = mean((yhat.rf != test.rf$stress)^2)         
 
 }
 
@@ -372,4 +395,6 @@ Rachakonda, Laavanya. “Human Stress Detection in and through Sleep.” Kaggle,
 
 https://github.com/cnoott/datascience-project
 
+\section{PowerPoint Presentation}
 
+https://1drv.ms/p/s!AscteYUnWyTZhCxD-OOwnh4VRtFT?e=h9HNfy
